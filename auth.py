@@ -29,7 +29,7 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated = "auto")
-oauth2bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -75,3 +75,17 @@ def create_access_token(username: str, id:str, expires_delta:timedelta):
     expires = datetime.utcnow()+expires_delta
     encode.update({"exp":expires})
     return jwt.encode(encode, key=SECRET_KEY, algorithm=ALGORITHM)
+
+def get_current_user(token: Annotated[str, Depends(oauth2bearer)]):
+    try:
+        payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=ALGORITHM)
+        username:str = payload.get("sub")
+        id: str = payload.get("id")
+
+        if username is None or id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User validation failed.")
+        
+        return{"username":username, "id":id}
+    
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User validation failed.")

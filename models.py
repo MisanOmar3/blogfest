@@ -22,3 +22,5 @@ class Post(Base):
     owner = Column(ForeignKey("users.id", ondelete="CASCADE"))
     body = Column(Text)
 
+# class Review(Base):
+#     __tablename__
