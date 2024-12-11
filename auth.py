@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Annotated, List
+from typing import Annotated
 from pydantic import BaseModel
 from starlette import status
 

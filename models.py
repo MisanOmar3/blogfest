@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Boolean, Integer, UUID, String, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import relationship
 import uuid
 from database import Base
 from pydantic import EmailStr
@@ -22,5 +23,10 @@ class Post(Base):
     owner = Column(ForeignKey("users.id", ondelete="CASCADE"))
     body = Column(Text)
 
-# class Review(Base):
-#     __tablename__
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String)
+    owner = Column(ForeignKey("users.id", ondelete="CASCADE"))
+    post_id = Column(ForeignKey("posts.id", ondelete="CASCADE"))
