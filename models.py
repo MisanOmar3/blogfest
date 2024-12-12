@@ -1,9 +1,9 @@
-from sqlalchemy import Column, Boolean, Integer, UUID, String, ForeignKey, Text
+from sqlalchemy import Column, Integer, UUID, String, ForeignKey, Text, Enum as SQLENUM
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 import uuid
 from database import Base
-from pydantic import EmailStr
+from enum import Enum
 
 class User(Base):
     __tablename__ = "users"
@@ -23,6 +23,14 @@ class Post(Base):
     owner = Column(ForeignKey("users.id", ondelete="CASCADE"))
     body = Column(Text)
 
+class Rating(Enum):
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4
+    FIVE = 5
+
+
 class Review(Base):
     __tablename__ = "reviews"
 
@@ -30,3 +38,4 @@ class Review(Base):
     text = Column(String)
     owner = Column(ForeignKey("users.id", ondelete="CASCADE"))
     post_id = Column(ForeignKey("posts.id", ondelete="CASCADE"))
+    rating = Column("rating", SQLENUM(Rating), nullable=True)

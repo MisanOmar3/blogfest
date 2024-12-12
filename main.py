@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from typing import Annotated, Optional
 from database import SessionLocal, engine
-import models, auth
+import models, auth, reviews
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ from starlette import status
 
 app = FastAPI()
 app.include_router(auth.router)
+app.include_router(reviews.router)
 models.Base.metadata.create_all(bind = engine)
 
 def get_db():
@@ -45,6 +46,8 @@ async def get_posts(user:user_dependency, db:db_dependency, title:Optional[str] 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed.")
     
     response = db.query(models.Post).all()
+    if not response:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The query didn't return any items.")
     if title:
         posts = []
         for post in response:
@@ -61,6 +64,8 @@ def get_post_detail(user: user_dependency, db:db_dependency, id:int):
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed.")
     response = db.query(models.Post).filter(models.Post.id == id).first()
+    if not response:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The query didn't return any items.")
     return response
 
 
@@ -70,6 +75,8 @@ def patch(id:int, update_post:UpdatePostBase, user:user_dependency, db:db_depend
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed.")    
     post = db.query(models.Post).filter(models.Post.id == id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The query didn't return any items.")
     if str(post.owner) != str(user["id"]):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this.")
     if update_post.body:
@@ -86,6 +93,8 @@ def delete_post(id:int, user:user_dependency, db:db_dependency):
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed.")
     post = db.query(models.Post).filter(models.Post.id == id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="The query didn't return any items.")
     if str(post.owner) != str(user["id"]):
         print(user["id"])
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have access to this.")
